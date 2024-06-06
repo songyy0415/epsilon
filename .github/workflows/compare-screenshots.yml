@@ -31,7 +31,7 @@ jobs:
       # - run: python3 build/screenshots/compare_crc.py output/release/simulator/linux/epsilon.bin -f exam_mode
       - run: python3 build/screenshots/compare_crc.py output/release/simulator/linux/epsilon.bin -f finance
       # - run: python3 build/screenshots/compare_crc.py output/release/simulator/linux/epsilon.bin -f grapher
-      # - run: python3 build/screenshots/compare_crc.py output/release/simulator/linux/epsilon.bin -f inference
+      - run: python3 build/screenshots/compare_crc.py output/release/simulator/linux/epsilon.bin -f inference
       # - run: python3 build/screenshots/compare_crc.py output/release/simulator/linux/epsilon.bin -f python
       - run: python3 build/screenshots/compare_crc.py output/release/simulator/linux/epsilon.bin -f regression
       - run: python3 build/screenshots/compare_crc.py output/release/simulator/linux/epsilon.bin -f sequences
