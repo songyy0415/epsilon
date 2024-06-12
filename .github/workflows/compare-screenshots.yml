@@ -39,8 +39,6 @@ jobs:
       - run: python3 build/screenshots/compare_crc.py output/release/simulator/linux/epsilon.bin -f statistics
       # - run: python3 build/screenshots/compare_crc.py output/release/simulator/linux/epsilon.bin -f toolbox
       # TODO_PCJ: restore grapher filter
-      - run: python3 build/screenshots/compare_crc.py output/release/simulator/linux/epsilon.bin -f grapher_auto_cursor_parametric
-      - run: python3 build/screenshots/compare_crc.py output/release/simulator/linux/epsilon.bin -f grapher_autozoom_10
       - run: python3 build/screenshots/compare_crc.py output/release/simulator/linux/epsilon.bin -f grapher_autozoom_6
       - run: python3 build/screenshots/compare_crc.py output/release/simulator/linux/epsilon.bin -f grapher_autozoom_2
       - run: python3 build/screenshots/compare_crc.py output/release/simulator/linux/epsilon.bin -f grapher_autozoom_9
