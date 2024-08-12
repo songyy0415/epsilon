@@ -1,0 +1,32 @@
+name: Code Coverage
+on:
+  pull_request:
+    paths-ignore:
+      - '**/*.md'
+      - 'poincare/doc/**'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  coverage-current-branch:
+    runs-on: ${{ endswith(github.repository, '/epsilon-internal') && 'self-hosted' || 'ubuntu-latest' }}
+    steps:
+      - name: Checkout current branch
+        uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.PAT || secrets.GITHUB_TOKEN }}
+          submodules: ${{ secrets.PAT != null }}
+          ref:  ${{ github.event.pull_request.head.sha }}
+      - name: Install dependencies
+        run: build/setup.sh --only-simulator
+      # TODO: compiling with gcc on the runner currently fails because usain has an old debian version (and thus its gcc is too old for our code)
+      # - name: Build coverage target
+      #   run: make -j32 TOOLCHAIN=host-gcc PLATFORM=simulator DEBUG=1 ASSERTIONS=1 coverage
+      - name: Upload coverage output
+        uses: actions/upload-artifact@v4
+        with:
+          name: code_coverage_${{ github.event.pull_request.head.sha }}
+          path: coverage_output/ #TODO: upload coverage output from previous step
+          retention-days: 7
