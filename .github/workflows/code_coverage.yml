@@ -10,23 +10,65 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  coverage-base-branch:
+    runs-on: ${{ endswith(github.repository, '/epsilon-internal') && 'self-hosted' || 'ubuntu-latest' }}
+    steps:
+      - name: Checkout base branch
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.PAT || secrets.GITHUB_TOKEN }}
+          submodules: ${{ secrets.PAT != null }}
+          ref:  ${{ github.event.pull_request.base.sha }} # TODO: common ancestor?
+          path: base
+      - name: Install dependencies
+        run: build/setup.sh --only-simulator
+      - name: Build coverage target
+        run: make -j32 TOOLCHAIN=host-gcc PLATFORM=simulator DEBUG=1 ASSERTIONS=1 coverage
+      - name: Shorten base commit
+        id: base_commit
+        run: echo "base_sha=$(git rev-parse --short ${{ github.event.pull_request.base.sha}} )" >> $GITHUB_OUTPUT
+      - name: Upload BASE coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage_info_${{ steps.base_commit.outputs.base_sha }}
+          path: coverage_info_output/base.info #TODO: upload coverage.info output from previous step
+          retention-days: 7
   coverage-current-branch:
+    needs: coverage-base-branch
     runs-on: ${{ endswith(github.repository, '/epsilon-internal') && 'self-hosted' || 'ubuntu-latest' }}
     steps:
       - name: Checkout current branch
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           token: ${{ secrets.PAT || secrets.GITHUB_TOKEN }}
           submodules: ${{ secrets.PAT != null }}
           ref:  ${{ github.event.pull_request.head.sha }}
       - name: Install dependencies
         run: build/setup.sh --only-simulator
-      # TODO: compiling with gcc on the runner currently fails because usain has an old debian version (and thus its gcc is too old for our code)
-      # - name: Build coverage target
-      #   run: make -j32 TOOLCHAIN=host-gcc PLATFORM=simulator DEBUG=1 ASSERTIONS=1 coverage
-      - name: Upload coverage output
+      - name: Build coverage target
+        run: make -j32 TOOLCHAIN=host-gcc PLATFORM=simulator DEBUG=1 ASSERTIONS=1 coverage
+      - name: Shorten HEAD commit
+        id: head_commit
+        run: echo "head_sha=$(git rev-parse --short ${{ github.event.pull_request.head.sha }} )" >> $GITHUB_OUTPUT
+      - name: Upload HEAD coverage
         uses: actions/upload-artifact@v4
         with:
-          name: code_coverage_${{ github.event.pull_request.head.sha }}
-          path: coverage_output/ #TODO: upload coverage output from previous step
+          name: coverage_info_${{ steps.head_commit.outputs.head_sha }}
+          path: coverage_info_output/head.info #TODO: upload coverage.info output from previous step
           retention-days: 7
+      - name: Shorten base commit
+        id: base_commit
+        run: echo "base_sha=$(git rev-parse --short ${{ github.event.pull_request.base.sha }} )" >> $GITHUB_OUTPUT
+      # - name: Generate report
+        # TODO: make a clean target for the HTLM coverage report
+        # run: genhtml coverage_info_output/head.info -o report
+        # TODO: add base.info as a baseline, but needs a more recent version of genhtml
+        # When the --baseline option is available (after the debian update?) one will need to first fetch the source diff between HEAD and BASE:
+        # run: git diff ${{ github.event.pull_request.head.sha }} ${{ github.event.pull_request.base.sha }} > diff.txt
+        # Then generate a report for HEAD enriched with the comparison to BASE:
+        # run: genhtml coverage_info_output/head.info -o report --baseline base.info --diff diff.txt
+      - name: Upload report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage_report_${{ steps.head_commit.outputs.head_sha }}_base_${{ steps.base_commit.outputs.base_sha }}
+          path: coverage_output #TODO: path of the 'report' target (will be in output/debug/...)
