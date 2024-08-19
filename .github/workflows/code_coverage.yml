@@ -30,7 +30,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: coverage_info_${{ steps.base_commit.outputs.base_sha }}
-          path: coverage_info_output/base.info #TODO: upload coverage.info output from previous step
+          path: output/debug/linux/coverage/code_coverage.info
           retention-days: 7
   coverage-current-branch:
     needs: coverage-base-branch
@@ -53,7 +53,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: coverage_info_${{ steps.head_commit.outputs.head_sha }}
-          path: coverage_info_output/head.info #TODO: upload coverage.info output from previous step
+          path: output/debug/linux/coverage/code_coverage.info
           retention-days: 7
       - name: Shorten base commit
         id: base_commit
