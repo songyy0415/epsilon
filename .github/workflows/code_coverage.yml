@@ -9,8 +9,9 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+# TODO: variable for coverage output directory
 jobs:
-  coverage-base-branch:
+  coverage-base:
     runs-on: ${{ endswith(github.repository, '/epsilon-internal') && 'self-hosted' || 'ubuntu-latest' }}
     steps:
       - name: Checkout base branch
@@ -32,8 +33,8 @@ jobs:
           name: base.info
           path: output/debug/linux/coverage/code_coverage.info
           retention-days: 7
-  coverage-current-branch:
-    # needs: coverage-base-branch
+  coverage-head:
+    needs: coverage-base
     runs-on: ${{ endswith(github.repository, '/epsilon-internal') && 'self-hosted' || 'ubuntu-latest' }}
     steps:
       - name: Checkout current branch
@@ -47,16 +48,18 @@ jobs:
         run: build/setup.sh --only-simulator
       - name: Build coverage target
         run: make -j32 TOOLCHAIN=host-gcc PLATFORM=simulator DEBUG=1 ASSERTIONS=1 coverage
-      - run: cp output/debug/linux/coverage/code_coverage.info output/debug/linux/coverage/base.info # TEST
-      # - name: Download base info
-      #   uses: actions/download-artifact@v4
-      #   with:
-      #     name: base.info
-      # - name: Generate diff file
-      #   run: git diff ${{ github.event.pull_request.head.sha }} ${{ github.event.pull_request.base.sha }} > diff.txt
+      - name: Rename head.info
+        run: mv output/debug/linux/coverage/code_coverage.info output/debug/linux/coverage/head.info
+      - name: Download base info
+        uses: actions/download-artifact@v4
+        with:
+          name: base.info
+          path: output/debug/linux/coverage
+      - name: Generate diff file
+        run: git diff ${{ github.event.pull_request.head.sha }} ${{ github.event.pull_request.base.sha }} > output/debug/linux/coverage/diff.txt
       - name: Generate coverage report
-        # run: genhtml output/debug/linux/coverage/code_coverage.info -o report --baseline-file output/debug/linux/coverage/base.info --diff diff.txt
-        run: genhtml output/debug/linux/coverage/code_coverage.info -o report --baseline-file output/debug/linux/coverage/base.info
+        run: genhtml output/debug/linux/coverage/head.info -o report --baseline-file output/debug/linux/coverage/base.info --diff output/debug/linux/coverage/diff.txt
+      # TODO: grep summary at the end of genhtml output?
       - name: Upload report
         uses: actions/upload-artifact@v4
         with:
@@ -64,10 +67,10 @@ jobs:
           path: report
       - name: Head coverage summary
         id: head_summary
-        run: lcov --summary code_coverage.info >> head_summary.txt
+        run: lcov --summary output/debug/linux/coverage/head.info >> output/debug/linux/coverage/head_summary.txt
       - name: Base coverage summary
         id: base_summary
-        run: lcov --summary base.info >> base_summary.txt
+        run: lcov --summary output/debug/linux/coverage/base.info >> output/debug/linux/coverage/base_summary.txt
       - name: Shorten HEAD commit
         id: head_commit
         run: echo "head_sha=$(git rev-parse --short ${{ github.event.pull_request.head.sha }} )" >> $GITHUB_OUTPUT
@@ -80,8 +83,8 @@ jobs:
           github-token: ${{secrets.GITHUB_TOKEN}}
           script: |
             var fs = require('fs');
-            var head_coverage_summary = fs.readFileSync('./head_summary.txt');
-            var base_coverage_summary = fs.readFileSync('./base_summary.txt');
+            var head_coverage_summary = fs.readFileSync('output/debug/linux/coverage/head_summary.txt');
+            var base_coverage_summary = fs.readFileSync('output/debug/linux/coverage/base_summary.txt');
             var head_commit = "${{ steps.head_commit.outputs.head_sha }}";
             var base_commit = "${{ steps.base_commit.outputs.base_sha }}";
             await github.rest.issues.createComment({
