@@ -56,7 +56,7 @@ jobs:
           name: base.info
           path: output/debug/linux/coverage
       - name: Generate diff file
-        run: git diff ${{ github.event.pull_request.head.sha }} ${{ github.event.pull_request.base.sha }} > output/debug/linux/coverage/diff.txt
+        run: /usr/share/lcov/support-scripts/gitdiff ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }} > diff.txt
       - name: Generate coverage report
         run: genhtml output/debug/linux/coverage/head.info -o report --baseline-file output/debug/linux/coverage/base.info --diff output/debug/linux/coverage/diff.txt
       # TODO: grep summary at the end of genhtml output?
