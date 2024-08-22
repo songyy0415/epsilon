@@ -86,28 +86,29 @@ jobs:
           name: coverage_report
           path: report
       # TODO: next steps should be in a separate workflow for safety reasons
-      - name: Compute summary comment
-        run: .venv/bin/python3 build/metrics/coverage_report.py genhtml_output.txt --summary > summary.txt
-      - name: Shorten HEAD commit
-        id: head_commit
-        run: echo "head_sha=$(git rev-parse --short ${{ github.event.pull_request.head.sha }} )" >> $GITHUB_OUTPUT
-      - name: Shorten base commit
-        id: base_commit
-        run: echo "base_sha=$(git rev-parse --short ${{ github.event.pull_request.base.sha }} )" >> $GITHUB_OUTPUT
+      - name: Format report into markdown tables
+        run: |
+          .venv/bin/python3 build/metrics/coverage_report.py genhtml_output.txt --summary > summary.md
+          .venv/bin/python3 build/metrics/coverage_report.py genhtml_output.txt --diff > differential.md
+      - name: Shorten commit ids
+        id: shorten_commits
+        run: |
+          echo "head_sha=$(git rev-parse --short ${{ github.event.pull_request.head.sha }} )" >> $GITHUB_OUTPUT
+          echo "base_sha=$(git rev-parse --short ${{ github.event.pull_request.base.sha }} )" >> $GITHUB_OUTPUT
       - name: Add comment
         uses: actions/github-script@v7
         with:
           github-token: ${{secrets.GITHUB_TOKEN}}
           script: |
             var fs = require('fs');
-            var report_summary = fs.readFileSync('report_summary.txt');
-            var head_commit = "${{ steps.head_commit.outputs.head_sha }}";
-            var base_commit = "${{ steps.base_commit.outputs.base_sha }}";
-            var summary = fs.readFileSync('summary.txt');
+            var head_commit = "${{ steps.shorten_commits.outputs.head_sha }}";
+            var base_commit = "${{ steps.shorten_commits.outputs.base_sha }}";
+            var summary = fs.readFileSync('summary.md');
+            var differential = fs.readFileSync('differential.md');
             var artifact_url = "${{ github.server_url }}/${{ github.repository }}//actions/runs/${{ github.run_id }}/artifacts/${{ steps.report.outputs.artifact-id }}"
             await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: context.issue.number,
-              body: "### Coverage report (" + head_commit + ")\n\n" + summary + "\n\nDownload full report: " + artifact_url
+              body: "### Coverage report (" + head_commit + ")\n\n" + summary + "#### Differences with base branch (" + base_commit + ")\n\n" + differential + "\n\nDownload full report: " + artifact_url
             });
