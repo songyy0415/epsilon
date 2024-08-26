@@ -13,12 +13,19 @@ jobs:
   coverage-base:
     runs-on: ${{ endswith(github.repository, '/epsilon-internal') && 'self-hosted' || 'ubuntu-latest' }}
     steps:
-      - name: Checkout base branch
+      - name: Fetch target branch and PR branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Find most recent ancestor of PR and target branch
+        id: common_ancestor
+        run: echo "commit_sha=$(git merge-base ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }})" >> $GITHUB_OUTPUT
+      - name: Checkout to most recent ancestor
         uses: actions/checkout@v4
         with:
           token: ${{ secrets.PAT || secrets.GITHUB_TOKEN }}
           submodules: ${{ secrets.PAT != null }}
-          ref:  ${{ github.event.pull_request.base.sha }} # TODO: common ancestor?
+          ref:  ${{ steps.common_ancestor.outputs.commit_sha }}
       - name: Install dependencies
         run: build/setup.sh --only-simulator
       - name: Build coverage target
@@ -75,8 +82,11 @@ jobs:
         with:
           name: head.info
           path: output/debug/linux/coverage
+      - name: Find most recent ancestor of PR and target branch
+        id: common_ancestor
+        run: echo "commit_sha=$(git merge-base ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }})" >> $GITHUB_OUTPUT
       - name: Generate diff file
-        run: /usr/share/lcov/support-scripts/gitdiff ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }} > diff.txt
+        run: /usr/share/lcov/support-scripts/gitdiff ${{ steps.common_ancestor.outputs.commit_sha }} ${{ github.event.pull_request.head.sha }} > diff.txt
       - name: Generate coverage report
         run: genhtml output/debug/linux/coverage/head.info -o report --baseline-file output/debug/linux/coverage/base.info --diff diff.txt | grep "coverage rate:" -A 40 > genhtml_output.txt
       - name: Upload report
@@ -94,7 +104,7 @@ jobs:
         id: shorten_commits
         run: |
           echo "head_sha=$(git rev-parse --short ${{ github.event.pull_request.head.sha }} )" >> $GITHUB_OUTPUT
-          echo "base_sha=$(git rev-parse --short ${{ github.event.pull_request.base.sha }} )" >> $GITHUB_OUTPUT
+          echo "base_sha=$(git rev-parse --short ${{ steps.common_ancestor.outputs.commit_sha }} )" >> $GITHUB_OUTPUT
       - name: Add comment
         uses: actions/github-script@v7
         with:
