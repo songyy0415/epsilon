@@ -59,7 +59,7 @@ jobs:
           name: head.info
           path: output/debug/linux/coverage/head.info
           retention-days: 7
-  report-diff:
+  report-diff: # TODO: this job should be in a separate workflow for safety reasons
     needs: [coverage-base, coverage-head]
     runs-on: ${{ endswith(github.repository, '/epsilon-internal') && 'self-hosted' || 'ubuntu-latest' }}
     steps:
@@ -95,7 +95,6 @@ jobs:
         with:
           name: coverage_report
           path: report
-      # TODO: next steps should be in a separate workflow for safety reasons
       - name: Format report into markdown tables
         run: |
           .venv/bin/python3 build/metrics/coverage_report.py genhtml_output.txt --summary > summary.md
