@@ -37,6 +37,7 @@ jobs:
         with:
           name: base.info
           path: output/debug/linux/coverage/base.info
+          retention-days: 7
       - name: Checkout current branch
         uses: actions/checkout@v4
         with:
@@ -68,6 +69,7 @@ jobs:
         with:
           name: diff
           path: diff.txt
+          retention-days: 7
       - name: Generate coverage report
         run: genhtml output/debug/linux/coverage/head.info -o report --baseline-file output/debug/linux/coverage/base.info --diff diff.txt --elide-path-mismatch | grep "coverage rate:" -A 40 > genhtml_output.txt
       - name: Upload report
@@ -76,7 +78,7 @@ jobs:
         with:
           name: coverage_report
           path: report
-
+          retention-days: 7
       # TODO: next steps should be in a separate workflow for safety reasons
       - name: Format report into markdown tables
         run: |
