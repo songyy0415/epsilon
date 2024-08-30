@@ -10,7 +10,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  coverage-base:
+  coverage:
     runs-on: ${{ endswith(github.repository, '/epsilon-internal') && 'self-hosted' || 'ubuntu-latest' }}
     steps:
       - name: Fetch target branch and PR branch
@@ -21,14 +21,10 @@ jobs:
         id: common_ancestor
         run: echo "commit_sha=$(git merge-base ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }})" >> $GITHUB_OUTPUT
       - name: Checkout to most recent ancestor
-        uses: actions/checkout@v4
-        with:
-          token: ${{ secrets.PAT || secrets.GITHUB_TOKEN }}
-          submodules: ${{ secrets.PAT != null }}
-          ref:  ${{ steps.common_ancestor.outputs.commit_sha }}
+        run: git checkout ${{ steps.common_ancestor.outputs.commit_sha }} && git submodule update
       - name: Install dependencies
         run: build/setup.sh --only-simulator
-      - name: Build coverage target
+      - name: Build BASE coverage target
         run: make -j32 TOOLCHAIN=host-gcc PLATFORM=simulator DEBUG=1 ASSERTIONS=1 coverage
       - name: Rename base.info
         run: mv output/debug/linux/coverage/code_coverage.info output/debug/linux/coverage/base.info
@@ -37,19 +33,15 @@ jobs:
         with:
           name: base.info
           path: output/debug/linux/coverage/base.info
-          retention-days: 7
-  coverage-head:
-    runs-on: ${{ endswith(github.repository, '/epsilon-internal') && 'self-hosted' || 'ubuntu-latest' }}
-    steps:
       - name: Checkout current branch
         uses: actions/checkout@v4
         with:
           token: ${{ secrets.PAT || secrets.GITHUB_TOKEN }}
           submodules: ${{ secrets.PAT != null }}
           ref:  ${{ github.event.pull_request.head.sha }}
-      - name: Install dependencies
+      - name: Re-install dependencies
         run: build/setup.sh --only-simulator
-      - name: Build coverage target
+      - name: Build HEAD coverage target
         run: make -j32 TOOLCHAIN=host-gcc PLATFORM=simulator DEBUG=1 ASSERTIONS=1 coverage
       - name: Rename head.info
         run: mv output/debug/linux/coverage/code_coverage.info output/debug/linux/coverage/head.info
@@ -59,32 +51,11 @@ jobs:
           name: head.info
           path: output/debug/linux/coverage/head.info
           retention-days: 7
-  report-diff: # TODO: this job should be in a separate workflow for safety reasons
-    needs: [coverage-base, coverage-head]
-    runs-on: ${{ endswith(github.repository, '/epsilon-internal') && 'self-hosted' || 'ubuntu-latest' }}
-    steps:
-      - name: Checkout current branch
-        uses: actions/checkout@v4
-        with:
-          token: ${{ secrets.PAT || secrets.GITHUB_TOKEN }}
-          submodules: ${{ secrets.PAT != null }}
-          ref:  ${{ github.event.pull_request.head.sha }}
-          fetch-depth: 0
-      - name: Install dependencies
-        run: build/setup.sh --only-simulator
-      - name: Download base info
+      - name: Download base info # needed because the checkout action cleaned the "output" folder
         uses: actions/download-artifact@v4
         with:
           name: base.info
           path: output/debug/linux/coverage
-      - name: Download head info
-        uses: actions/download-artifact@v4
-        with:
-          name: head.info
-          path: output/debug/linux/coverage
-      - name: Find most recent ancestor of PR and target branch
-        id: common_ancestor
-        run: echo "commit_sha=$(git merge-base ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }})" >> $GITHUB_OUTPUT
       - name: Generate diff file
         run: /usr/share/lcov/support-scripts/gitdiff ${{ steps.common_ancestor.outputs.commit_sha }} ${{ github.event.pull_request.head.sha }} > diff.txt
       - name: Generate coverage report
@@ -95,6 +66,13 @@ jobs:
         with:
           name: coverage_report
           path: report
+      - name: Upload diff
+        id: diff
+        uses: actions/upload-artifact@v4
+        with:
+          name: diff
+          path: diff.txt
+      # TODO: next steps should be in a separate workflow for safety reasons
       - name: Format report into markdown tables
         run: |
           .venv/bin/python3 build/metrics/coverage_report.py genhtml_output.txt --summary > summary.md
