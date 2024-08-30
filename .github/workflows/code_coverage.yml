@@ -21,7 +21,11 @@ jobs:
         id: common_ancestor
         run: echo "commit_sha=$(git merge-base ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }})" >> $GITHUB_OUTPUT
       - name: Checkout to most recent ancestor
-        run: git checkout ${{ steps.common_ancestor.outputs.commit_sha }} && git submodule update
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.PAT || secrets.GITHUB_TOKEN }}
+          submodules: ${{ secrets.PAT != null }}
+          ref:  ${{ steps.common_ancestor.outputs.commit_sha }}
       - name: Install dependencies
         run: build/setup.sh --only-simulator
       - name: Build BASE coverage target
@@ -51,27 +55,28 @@ jobs:
           name: head.info
           path: output/debug/linux/coverage/head.info
           retention-days: 7
-      - name: Download base info # needed because the checkout action cleaned the "output" folder
+      - name: Download BASE info # needed because the checkout action cleaned the "output" folder
         uses: actions/download-artifact@v4
         with:
           name: base.info
           path: output/debug/linux/coverage
       - name: Generate diff file
         run: /usr/share/lcov/support-scripts/gitdiff ${{ steps.common_ancestor.outputs.commit_sha }} ${{ github.event.pull_request.head.sha }} > diff.txt
+      - name: Upload diff file # useful for debug
+        id: diff
+        uses: actions/upload-artifact@v4
+        with:
+          name: diff
+          path: diff.txt
       - name: Generate coverage report
-        run: genhtml output/debug/linux/coverage/head.info -o report --baseline-file output/debug/linux/coverage/base.info --diff diff.txt | grep "coverage rate:" -A 40 > genhtml_output.txt
+        run: genhtml output/debug/linux/coverage/head.info -o report --baseline-file output/debug/linux/coverage/base.info --diff diff.txt --elide-path-mismatch | grep "coverage rate:" -A 40 > genhtml_output.txt
       - name: Upload report
         id: report
         uses: actions/upload-artifact@v4
         with:
           name: coverage_report
           path: report
-      - name: Upload diff
-        id: diff
-        uses: actions/upload-artifact@v4
-        with:
-          name: diff
-          path: diff.txt
+
       # TODO: next steps should be in a separate workflow for safety reasons
       - name: Format report into markdown tables
         run: |
