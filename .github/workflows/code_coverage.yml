@@ -4,9 +4,6 @@ on:
     paths-ignore:
       - '**/*.md'
       - 'poincare/doc/**'
-    # TODO: Remove this condition to reactivate CI
-    branches:
-      - workflow-disabled
 
 env:
   MAKEFLAGS: ${{ (github.repository == 'numworks/epsilon-internal') && '-j32 CCACHE=1' || '-j2' }}
