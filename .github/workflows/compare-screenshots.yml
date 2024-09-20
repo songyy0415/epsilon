@@ -27,13 +27,6 @@ jobs:
       - run: build/setup.sh --only-simulator
       - name: Build PR head
         run: make TOOLCHAIN=host-clang PLATFORM=simulator ASSERTIONS=1 epsilon.no_conversion.bin epsilon.no_conversion.cas.bin
-      # - name: Compare screenshot images
-      - run: python3 build/screenshots/compare_crc.py -d tests/screenshots_dataset_cas output/release/linux/epsilon.no_conversion.cas.bin
-      - run: python3 build/screenshots/compare_crc.py output/release/linux/epsilon.no_conversion.bin
-      - name: Upload output
-        if: failure()
-        uses: actions/upload-artifact@v3
-        with:
-          name: output_compare_crc
-          path: compare_crc_output/
-          retention-days: 7
+      - name: Compare crc of screenshots
+      - run: python3 build/screenshots/compare_crc.py -d tests/screenshots_dataset_cas output/release/linux/epsilon.no_conversion.cas.bin -n
+      - run: python3 build/screenshots/compare_crc.py output/release/linux/epsilon.no_conversion.bin -n
