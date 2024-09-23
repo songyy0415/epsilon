@@ -15,6 +15,7 @@ concurrency:
 
 jobs:
   coverage:
+    timeout-minutes: 60
     runs-on: ${{ (github.repository == 'numworks/epsilon-internal') && 'with-cache' || 'ubuntu-latest' }}
     steps:
       - name: Fetch target branch and PR branch
@@ -33,6 +34,7 @@ jobs:
       - name: Install dependencies
         run: build/setup.sh --only-simulator
       - name: Build BASE coverage target
+        timeout-minutes: 15
         run: make TOOLCHAIN=host-gcc PLATFORM=simulator DEBUG=1 ASSERTIONS=1 coverage
       - name: Rename base.info
         run: mv output/debug/linux/coverage/code_coverage.info output/debug/linux/coverage/base.info
@@ -51,6 +53,7 @@ jobs:
       - name: Re-install dependencies
         run: build/setup.sh --only-simulator
       - name: Build HEAD coverage target
+        timeout-minutes: 15
         run: make TOOLCHAIN=host-gcc PLATFORM=simulator DEBUG=1 ASSERTIONS=1 coverage
       - name: Rename head.info
         run: mv output/debug/linux/coverage/code_coverage.info output/debug/linux/coverage/head.info
