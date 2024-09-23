@@ -69,8 +69,7 @@ jobs:
           name: base.info
           path: output/debug/linux/coverage
       - name: Generate diff file
-        # Remove b/ prefix from diff file to prevent path mismatch errors. Upgrading lcov to 2.1 should fix this issue.
-        run: /usr/share/lcov/support-scripts/gitdiff ${{ steps.common_ancestor.outputs.commit_sha }} ${{ github.event.pull_request.head.sha }} | sed -e 's/ b\// /g' > diff.txt
+        run: /usr/local/share/lcov/support-scripts/gitdiff ${{ steps.common_ancestor.outputs.commit_sha }} ${{ github.event.pull_request.head.sha }} > diff.txt
       - name: Upload diff file # useful for debug
         id: diff
         uses: actions/upload-artifact@v4
