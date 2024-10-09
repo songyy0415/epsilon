@@ -8,7 +8,7 @@ on:
 
 env:
   MAKEFLAGS: ${{ (github.repository == 'numworks/epsilon-internal') && '-j32 CCACHE=1' || '-j2' }}
-  CCACHE_DIR: ${{ (github.repository == 'numworks/epsilon-internal') && '/home/usain/_work/ccache' || '' }}
+  CCACHE_DIR: ${{ (github.repository == 'numworks/epsilon-internal') && '/home/usain/_work/ccache_docker' || '' }}
   COVERAGE_OUTPUT_DIR: '${{ github.workspace }}/output/debug/no_assert/linux/coverage'
 
 concurrency:
@@ -27,19 +27,19 @@ jobs:
       - name: Find most recent ancestor of PR and target branch
         id: common_ancestor
         run: echo "commit_sha=$(git merge-base ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }})" >> $GITHUB_OUTPUT
+      - name: Build container and define DOCKER_RUN
+        uses: ./.github/actions/docker-builder
       - name: Checkout to most recent ancestor
         uses: actions/checkout@v4
         with:
           token: ${{ secrets.PAT || secrets.GITHUB_TOKEN }}
           submodules: ${{ secrets.PAT != null }}
           ref:  ${{ steps.common_ancestor.outputs.commit_sha }}
-      - name: Install dependencies
-        run: build/setup.sh --only-simulator
       - name: Create coverage output directory
         run: mkdir -p ${{ env.COVERAGE_OUTPUT_DIR }}
       - name: Build BASE coverage target
         timeout-minutes: 15
-        run: touch ${{ env.COVERAGE_OUTPUT_DIR }}/base_summary.txt && make TOOLCHAIN=host-gcc PLATFORM=simulator DEBUG=1 ASSERTIONS=0 coverage | grep "coverage rate:" --text -A 4 > ${{ env.COVERAGE_OUTPUT_DIR }}/base_summary.txt
+        run: $DOCKER_RUN "touch ${{ env.COVERAGE_OUTPUT_DIR }}/base_summary.txt && make TOOLCHAIN=host-gcc PLATFORM=simulator DEBUG=1 ASSERTIONS=0 coverage | grep "coverage rate:" --text -A 4 > ${{ env.COVERAGE_OUTPUT_DIR }}/base_summary.txt"
       - name: Rename base.info
         run: mv ${{ env.COVERAGE_OUTPUT_DIR }}/code_coverage.info ${{ env.COVERAGE_OUTPUT_DIR }}/base.info
       - name: Upload BASE coverage
@@ -60,11 +60,9 @@ jobs:
           token: ${{ secrets.PAT || secrets.GITHUB_TOKEN }}
           submodules: ${{ secrets.PAT != null }}
           ref:  ${{ github.event.pull_request.head.sha }}
-      - name: Re-install dependencies
-        run: build/setup.sh --only-simulator
       - name: Build HEAD coverage target
         timeout-minutes: 15
-        run: make TOOLCHAIN=host-gcc PLATFORM=simulator DEBUG=1 ASSERTIONS=0 coverage
+        run: $DOCKER_RUN "make PYTHON=\$PYTHON PLATFORM=simulator DEBUG=1 ASSERTIONS=0 coverage"
       - name: Rename head.info
         run: mv ${{ env.COVERAGE_OUTPUT_DIR }}/code_coverage.info ${{ env.COVERAGE_OUTPUT_DIR }}/head.info
       - name: Upload HEAD coverage
@@ -93,7 +91,7 @@ jobs:
           path: ${{ env.COVERAGE_OUTPUT_DIR }}/diff.txt
           retention-days: 2
       - name: Generate coverage report
-        run: touch ${{ env.COVERAGE_OUTPUT_DIR }}/genhtml_output.txt && genhtml ${{ env.COVERAGE_OUTPUT_DIR }}/head.info -o ${{ env.COVERAGE_OUTPUT_DIR }}/report --baseline-file ${{ env.COVERAGE_OUTPUT_DIR }}/base.info --diff-file ${{ env.COVERAGE_OUTPUT_DIR }}/diff.txt --no-function-coverage --ignore-errors path | grep "coverage rate:" -A 40 > ${{ env.COVERAGE_OUTPUT_DIR }}/genhtml_output.txt
+        run: $DOCKER_RUN "touch ${{ env.COVERAGE_OUTPUT_DIR }}/genhtml_output.txt && genhtml ${{ env.COVERAGE_OUTPUT_DIR }}/head.info -o ${{ env.COVERAGE_OUTPUT_DIR }}/report --baseline-file ${{ env.COVERAGE_OUTPUT_DIR }}/base.info --diff-file ${{ env.COVERAGE_OUTPUT_DIR }}/diff.txt --no-function-coverage --ignore-errors path | grep \"coverage rate:\" -A 40 > ${{ env.COVERAGE_OUTPUT_DIR }}/genhtml_output.txt"
       - name: Upload report
         id: report
         uses: actions/upload-artifact@v4
@@ -110,8 +108,8 @@ jobs:
       # TODO: next steps should be in a separate workflow for safety reasons
       - name: Format report into markdown tables
         run: |
-          touch ${{ env.COVERAGE_OUTPUT_DIR }}/summary.md && .venv/bin/python3 build/metrics/coverage_report.py ${{ env.COVERAGE_OUTPUT_DIR }}/genhtml_output.txt --base_output ${{ env.COVERAGE_OUTPUT_DIR }}/base_summary.txt --summary > ${{ env.COVERAGE_OUTPUT_DIR }}/summary.md
-          touch ${{ env.COVERAGE_OUTPUT_DIR }}/differential.md && .venv/bin/python3 build/metrics/coverage_report.py ${{ env.COVERAGE_OUTPUT_DIR }}/genhtml_output.txt --diff > ${{ env.COVERAGE_OUTPUT_DIR }}/differential.md
+          touch ${{ env.COVERAGE_OUTPUT_DIR }}/summary.md && $DOCKER_RUN "\$PYTHON build/metrics/coverage_report.py ${{ env.COVERAGE_OUTPUT_DIR }}/genhtml_output.txt --base_output ${{ env.COVERAGE_OUTPUT_DIR }}/base_summary.txt" --summary > ${{ env.COVERAGE_OUTPUT_DIR }}/summary.md
+          touch ${{ env.COVERAGE_OUTPUT_DIR }}/differential.md && $DOCKER_RUN "\$PYTHON build/metrics/coverage_report.py ${{ env.COVERAGE_OUTPUT_DIR }}/genhtml_output.txt --diff" > ${{ env.COVERAGE_OUTPUT_DIR }}/differential.md
       - name: Shorten commit ids
         id: shorten_commits
         run: |
