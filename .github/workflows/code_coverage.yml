@@ -8,6 +8,7 @@ on:
 env:
   MAKEFLAGS: ${{ (github.repository == 'numworks/epsilon-internal') && '-j32 CCACHE=1' || '-j2' }}
   CCACHE_DIR: ${{ (github.repository == 'numworks/epsilon-internal') && '/home/usain/_work/ccache' || '' }}
+  COVERAGE_OUTPUT_DIR: '/home/usain/_work/epsilon-internal/epsilon-internal/output/debug/no_assert/linux/coverage'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -33,25 +34,25 @@ jobs:
           ref:  ${{ steps.common_ancestor.outputs.commit_sha }}
       - name: Install dependencies
         run: build/setup.sh --only-simulator
+      - name: Create coverage output directory
+        run: mkdir -p ${{ env.COVERAGE_OUTPUT_DIR }}
       - name: Build BASE coverage target
         timeout-minutes: 15
-        run: make TOOLCHAIN=host-gcc PLATFORM=simulator DEBUG=1 ASSERTIONS=0 coverage | grep "coverage rate:" -A 4 > base_summary.txt
+        run: touch ${{ env.COVERAGE_OUTPUT_DIR }}/base_summary.txt && make TOOLCHAIN=host-gcc PLATFORM=simulator DEBUG=1 ASSERTIONS=0 coverage | grep "coverage rate:" -A 4 > ${{ env.COVERAGE_OUTPUT_DIR }}/base_summary.txt
       - name: Rename base.info
-        run: mv output/debug/no_assert/linux/coverage/code_coverage.info output/debug/no_assert/linux/coverage/base.info
+        run: mv ${{ env.COVERAGE_OUTPUT_DIR }}/code_coverage.info ${{ env.COVERAGE_OUTPUT_DIR }}/base.info
       - name: Upload BASE coverage
         uses: actions/upload-artifact@v4
         with:
           name: base.info
-          path: output/debug/no_assert/linux/coverage/base.info
+          path: ${{ env.COVERAGE_OUTPUT_DIR }}/base.info
           retention-days: 2
       - name: Upload BASE coverage summary
         uses: actions/upload-artifact@v4
         with:
           name: base_summary
-          path: base_summary.txt
+          path: ${{ env.COVERAGE_OUTPUT_DIR }}/base_summary.txt
           retention-days: 2
-      - name: Remove base summary
-        run: rm base_summary.txt
       - name: Checkout current branch
         uses: actions/checkout@v4
         with:
@@ -64,45 +65,46 @@ jobs:
         timeout-minutes: 15
         run: make TOOLCHAIN=host-gcc PLATFORM=simulator DEBUG=1 ASSERTIONS=0 coverage
       - name: Rename head.info
-        run: mv output/debug/no_assert/linux/coverage/code_coverage.info output/debug/no_assert/linux/coverage/head.info
+        run: mv ${{ env.COVERAGE_OUTPUT_DIR }}/code_coverage.info ${{ env.COVERAGE_OUTPUT_DIR }}/head.info
       - name: Upload HEAD coverage
         uses: actions/upload-artifact@v4
         with:
           name: head.info
-          path: output/debug/no_assert/linux/coverage/head.info
+          path: ${{ env.COVERAGE_OUTPUT_DIR }}/head.info
           retention-days: 2
       - name: Download BASE info # needed because the checkout action cleaned the "output" folder
         uses: actions/download-artifact@v4
         with:
           name: base.info
-          path: output/debug/no_assert/linux/coverage
+          path: ${{ env.COVERAGE_OUTPUT_DIR }}
       - name: Download BASE coverage summary
         uses: actions/download-artifact@v4
         with:
           name: base_summary
+          path: ${{ env.COVERAGE_OUTPUT_DIR }}
       - name: Generate diff file
-        run: /usr/local/share/lcov/support-scripts/gitdiff ${{ steps.common_ancestor.outputs.commit_sha }} ${{ github.event.pull_request.head.sha }} > diff.txt
+        run: touch ${{ env.COVERAGE_OUTPUT_DIR }}/diff.txt && /usr/local/share/lcov/support-scripts/gitdiff ${{ steps.common_ancestor.outputs.commit_sha }} ${{ github.event.pull_request.head.sha }} > ${{ env.COVERAGE_OUTPUT_DIR }}/diff.txt
       - name: Upload diff file # useful for debug
         id: diff
         uses: actions/upload-artifact@v4
         with:
           name: diff
-          path: diff.txt
+          path: ${{ env.COVERAGE_OUTPUT_DIR }}/diff.txt
           retention-days: 2
       - name: Generate coverage report
-        run: genhtml output/debug/no_assert/linux/coverage/head.info -o report --baseline-file output/debug/no_assert/linux/coverage/base.info --diff-file diff.txt | grep "coverage rate:" -A 40 > genhtml_output.txt
+        run: touch ${{ env.COVERAGE_OUTPUT_DIR }}/genhtml_output.txt && genhtml ${{ env.COVERAGE_OUTPUT_DIR }}/head.info -o ${{ env.COVERAGE_OUTPUT_DIR }}/report --baseline-file ${{ env.COVERAGE_OUTPUT_DIR }}/base.info --diff-file ${{ env.COVERAGE_OUTPUT_DIR }}/diff.txt | grep "coverage rate:" -A 40 > ${{ env.COVERAGE_OUTPUT_DIR }}/genhtml_output.txt
       - name: Upload report
         id: report
         uses: actions/upload-artifact@v4
         with:
           name: coverage_report
-          path: report
+          path: ${{ env.COVERAGE_OUTPUT_DIR }}/report
           retention-days: 2
       # TODO: next steps should be in a separate workflow for safety reasons
       - name: Format report into markdown tables
         run: |
-          .venv/bin/python3 build/metrics/coverage_report.py genhtml_output.txt --base_output base_summary.txt --summary > summary.md
-          .venv/bin/python3 build/metrics/coverage_report.py genhtml_output.txt --diff > differential.md
+          touch ${{ env.COVERAGE_OUTPUT_DIR }}/summary.md && .venv/bin/python3 build/metrics/coverage_report.py ${{ env.COVERAGE_OUTPUT_DIR }}/genhtml_output.txt --base_output ${{ env.COVERAGE_OUTPUT_DIR }}/base_summary.txt --summary > ${{ env.COVERAGE_OUTPUT_DIR }}/summary.md
+          touch ${{ env.COVERAGE_OUTPUT_DIR }}/differential.md && .venv/bin/python3 build/metrics/coverage_report.py ${{ env.COVERAGE_OUTPUT_DIR }}/genhtml_output.txt --diff > ${{ env.COVERAGE_OUTPUT_DIR }}/differential.md
       - name: Shorten commit ids
         id: shorten_commits
         run: |
@@ -116,8 +118,8 @@ jobs:
             var fs = require('fs');
             var head_commit = "${{ steps.shorten_commits.outputs.head_sha }}";
             var base_commit = "${{ steps.shorten_commits.outputs.base_sha }}";
-            var summary = fs.readFileSync('summary.md');
-            var differential = fs.readFileSync('differential.md');
+            var summary = fs.readFileSync('${{ env.COVERAGE_OUTPUT_DIR }}/summary.md');
+            var differential = fs.readFileSync('${{ env.COVERAGE_OUTPUT_DIR }}/differential.md');
             var artifact_url = "${{ github.server_url }}/${{ github.repository }}//actions/runs/${{ github.run_id }}/artifacts/${{ steps.report.outputs.artifact-id }}"
 
             const body = "### Coverage report (" + head_commit + ")\n\n" + summary + "#### Differences with base branch (" + base_commit + ")\n\n" + differential + "\n\nDownload full report: " + artifact_url
