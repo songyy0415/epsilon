@@ -92,7 +92,7 @@ jobs:
           path: ${{ env.COVERAGE_OUTPUT_DIR }}/diff.txt
           retention-days: 2
       - name: Generate coverage report
-        run: touch ${{ env.COVERAGE_OUTPUT_DIR }}/genhtml_output.txt && genhtml ${{ env.COVERAGE_OUTPUT_DIR }}/head.info -o ${{ env.COVERAGE_OUTPUT_DIR }}/report --baseline-file ${{ env.COVERAGE_OUTPUT_DIR }}/base.info --diff-file ${{ env.COVERAGE_OUTPUT_DIR }}/diff.txt --no-function-coverage | grep "coverage rate:" -A 40 > ${{ env.COVERAGE_OUTPUT_DIR }}/genhtml_output.txt
+        run: touch ${{ env.COVERAGE_OUTPUT_DIR }}/genhtml_output.txt && genhtml ${{ env.COVERAGE_OUTPUT_DIR }}/head.info -o ${{ env.COVERAGE_OUTPUT_DIR }}/report --baseline-file ${{ env.COVERAGE_OUTPUT_DIR }}/base.info --diff-file ${{ env.COVERAGE_OUTPUT_DIR }}/diff.txt --no-function-coverage --ignore-errors path | grep "coverage rate:" -A 40 > ${{ env.COVERAGE_OUTPUT_DIR }}/genhtml_output.txt
       - name: Upload report
         id: report
         uses: actions/upload-artifact@v4
