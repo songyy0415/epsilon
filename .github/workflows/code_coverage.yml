@@ -40,7 +40,7 @@ jobs:
         run: mkdir -p ${{ env.COVERAGE_OUTPUT_DIR }}
       - name: Build BASE coverage target
         timeout-minutes: 15
-        run: $DOCKER_RUN "touch ${{ env.COVERAGE_OUTPUT_DIR }}/base_summary.txt && make TOOLCHAIN=host-gcc PLATFORM=simulator DEBUG=1 ASSERTIONS=0 coverage | grep "coverage rate:" --text -A 4 > ${{ env.COVERAGE_OUTPUT_DIR }}/base_summary.txt"
+        run: $DOCKER_RUN "touch ${{ env.COVERAGE_OUTPUT_DIR }}/base_summary.txt && make TOOLCHAIN=host-gcc PLATFORM=simulator DEBUG=1 ASSERTIONS=0 coverage | grep \"coverage rate:\" --text -A 4 > ${{ env.COVERAGE_OUTPUT_DIR }}/base_summary.txt"
       - name: Rename base.info
         run: mv ${{ env.COVERAGE_OUTPUT_DIR }}/code_coverage.info ${{ env.COVERAGE_OUTPUT_DIR }}/base.info
       - name: Upload BASE coverage
@@ -109,7 +109,7 @@ jobs:
       # TODO: next steps should be in a separate workflow for safety reasons
       - name: Format report into markdown tables
         run: |
-          touch ${{ env.COVERAGE_OUTPUT_DIR }}/summary.md && $DOCKER_RUN "\$PYTHON build/metrics/coverage_report.py ${{ env.COVERAGE_OUTPUT_DIR }}/genhtml_output.txt --base_output ${{ env.COVERAGE_OUTPUT_DIR }}/base_summary.txt" --summary > ${{ env.COVERAGE_OUTPUT_DIR }}/summary.md
+          touch ${{ env.COVERAGE_OUTPUT_DIR }}/summary.md && $DOCKER_RUN "\$PYTHON build/metrics/coverage_report.py ${{ env.COVERAGE_OUTPUT_DIR }}/genhtml_output.txt --base_output ${{ env.COVERAGE_OUTPUT_DIR }}/base_summary.txt --summary" > ${{ env.COVERAGE_OUTPUT_DIR }}/summary.md
           touch ${{ env.COVERAGE_OUTPUT_DIR }}/differential.md && $DOCKER_RUN "\$PYTHON build/metrics/coverage_report.py ${{ env.COVERAGE_OUTPUT_DIR }}/genhtml_output.txt --diff" > ${{ env.COVERAGE_OUTPUT_DIR }}/differential.md
       - name: Shorten commit ids
         id: shorten_commits
