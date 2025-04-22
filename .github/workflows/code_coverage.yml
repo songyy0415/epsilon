@@ -10,7 +10,6 @@ on:
 
 env:
   MAKEFLAGS: ${{ vars.MAKEFLAGS_CACHED }}
-  CCACHE_DIR: ${{ vars.CCACHE_DIR }}
   COVERAGE_OUTPUT_DIR: 'output/debug/no_assert/linux/coverage'
 
 concurrency:
