@@ -1,25 +1,14 @@
 name: Code Coverage
-on:
-  pull_request:
-    paths-ignore:
-      - '**/*.md'
-      - 'poincare/doc/**'
-      - 'ion/src/device/**'
-      - '**/scandium/**'
-      - 'external_apps/**'
 
-env:
-  MAKEFLAGS: ${{ vars.MAKEFLAGS_CACHED }}
-  COVERAGE_OUTPUT_DIR: 'output/debug/no_assert/linux/coverage'
-
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+on: workflow_call
 
 jobs:
   coverage:
     timeout-minutes: 15
     runs-on: ${{ fromJSON(vars.EPSILON_CACHED_RUNNER_LABELS) }}
+    env:
+      MAKEFLAGS: ${{ vars.MAKEFLAGS_CACHED }}
+      COVERAGE_OUTPUT_DIR: 'output/debug/no_assert/linux/coverage'
     steps:
       - name: Fetch target branch and PR branch
         uses: actions/checkout@v4
