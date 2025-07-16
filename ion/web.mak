@@ -67,6 +67,14 @@ $(OUTPUT_DIRECTORY)/$(_ion_web_path)/calculator.html: $(addprefix $(PATH_ion)/sr
 
 $(OUTPUT_DIRECTORY)/$(_ion_web_path)/calculator.css: $(OUTPUT_DIRECTORY)/$(_ion_web_path)/calculator.html
 
+$(OUTPUT_DIRECTORY)/$(_ion_web_path)/calculator.js: $(_ion_web_path)/calculator.js
+	$(call rule_label,HOSTCPP)
+	$(HOSTCPP) \
+		-E -CC \
+		-DEM_MODULE_NAME=$(APP_NAME) \
+		-P $(filter %.js,$^) \
+		$@
+
 $(OUTPUT_DIRECTORY)/$(_ion_web_path)/simulator.html: $(_ion_web_path)/simulator.html.inc $(addprefix $(OUTPUT_DIRECTORY)/$(_ion_web_path)/calculator.,html css)
 	$(call rule_label,HOSTCPP)
 	$(HOSTCPP) \
