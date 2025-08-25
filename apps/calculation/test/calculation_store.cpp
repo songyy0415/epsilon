@@ -475,6 +475,10 @@ QUIZ_CASE(calculation_display_exact_approximate) {
                       &store);
   assertCalculationIs("int(6/x^2-8/x^3,x,1,2)", DisplayOutput::ApproximateOnly,
                       EqualSign::Hidden, nullptr, "0", &globalContext, &store);
+  assertCalculationIs("6i'log(14,10)", DisplayOutput::ExactAndApproximateToggle,
+                      EqualSign::Approximation,
+                      "6rad·(((π·log(2))/10800)i+((π·log(7))/10800)i)",
+                      "3.333951312×10^(-4)×6rad×i", &globalContext, &store);
 
   MathPreferences::SharedPreferences()->setAngleUnit(
       Preferences::AngleUnit::Degree);
