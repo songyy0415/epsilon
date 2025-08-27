@@ -66,6 +66,11 @@ void AdditionalResultsController::openAdditionalResults(
     }
   }
   if (mainController) {
+    if (mainController->numberOfRows() == 0) {
+      /* TODO: remove this defensive step by making sure there will be
+       * additional results beforehand. */
+      return;
+    }
     assert(mainController->numberOfRows() > 0);
     App::app()->displayModalViewController(
         mainController, 0.f, 0.f, Escher::Metric::PopUpMarginsNoBottom);
