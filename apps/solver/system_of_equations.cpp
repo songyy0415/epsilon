@@ -175,7 +175,8 @@ void SystemOfEquations::tidy(PoolObject* treePoolCursor) {
   }
 }
 
-/* Simplify and/or approximate solutions. Never call advanced reduction.
+/* Simplify and/or approximate solutions. Only call advanced reduction when
+ * approximating for polar format.
  * [exact] and [approximate] are optional parameter. */
 static void simplifyAndApproximateSolution(
     UserExpression e, UserExpression* exact, UserExpression* approximate,
@@ -196,7 +197,8 @@ static void simplifyAndApproximateSolution(
       .m_unitFormat = unitFormat,
       .m_symbolic = symbolicComputation,
       .m_context = context,
-      .m_advanceReduce = false};
+      .m_advanceReduce =
+          !exact && complexFormat == Internal::ComplexFormat::Polar};
   if (exact) {
     if (approximate) {
       e.cloneAndSimplifyAndApproximate(exact, approximate, projCtx);
