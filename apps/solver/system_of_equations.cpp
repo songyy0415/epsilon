@@ -175,8 +175,7 @@ void SystemOfEquations::tidy(PoolObject* treePoolCursor) {
   }
 }
 
-/* Simplify and/or approximate solutions. Only call advanced reduction when
- * approximating for polar format.
+/* Simplify and/or approximate solutions.
  * [exact] and [approximate] are optional parameter. */
 static void simplifyAndApproximateSolution(
     UserExpression e, UserExpression* exact, UserExpression* approximate,
@@ -197,6 +196,8 @@ static void simplifyAndApproximateSolution(
       .m_unitFormat = unitFormat,
       .m_symbolic = symbolicComputation,
       .m_context = context,
+      /* Advanced reduction has already been called if `exact`. For
+       * approximation, it is needed only in polar format for beautification. */
       .m_advanceReduce =
           !exact && complexFormat == Internal::ComplexFormat::Polar};
   if (exact) {
