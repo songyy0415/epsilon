@@ -845,6 +845,27 @@ QUIZ_CASE(calculation_complex_format) {
                       EqualSign::Hidden, "4", nullptr, &globalContext, &store);
   assertCalculationIs("(-2)^(1/4)", DisplayOutput::ExactOnly, EqualSign::Hidden,
                       "nonreal", nullptr, &globalContext, &store);
+  assertCalculationIs("log(-inf,0.3)", DisplayOutput::ExactOnly,
+                      EqualSign::Hidden, "undef", nullptr, &globalContext,
+                      &store);
+  assertCalculationIs("log(-inf,3)", DisplayOutput::ExactOnly,
+                      EqualSign::Hidden, "undef", nullptr, &globalContext,
+                      &store);
+  assertCalculationIs("log(inf,-3)", DisplayOutput::ExactOnly,
+                      EqualSign::Hidden, "undef", nullptr, &globalContext,
+                      &store);
+  assertCalculationIs(
+      "{√(-1),1/0}", DisplayOutput::ApproximateIsIdenticalToExact,
+      EqualSign::Hidden, "{nonreal,undef}", nullptr, &globalContext, &store);
+  assertCalculationIs("(√(-1),2)", DisplayOutput::ApproximateIsIdenticalToExact,
+                      EqualSign::Hidden, "(nonreal,2)", nullptr, &globalContext,
+                      &store);
+  assertCalculationIs(
+      "[[√(-1),2]]", DisplayOutput::ApproximateIsIdenticalToExact,
+      EqualSign::Hidden, "[[nonreal,2]]", nullptr, &globalContext, &store);
+  assertCalculationIs("√(cos(2))", DisplayOutput::ApproximateOnly,
+                      EqualSign::Hidden, nullptr, "nonreal", &globalContext,
+                      &store);
 
   MathPreferences::SharedPreferences()->setComplexFormat(
       Preferences::ComplexFormat::Cartesian);
