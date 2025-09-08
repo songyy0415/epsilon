@@ -1489,9 +1489,8 @@ QUIZ_CASE(pcj_simplification_dependencies) {
 
   Tree* e5 =
       KDep(1_e, KDepList(KAdd(KInf, "x"_e, KMult(-1_e, KInf))))->cloneTree();
-  const Tree* r5 = KDep(1_e, KDepList(KAdd("x"_e, KInf, KOpposite(KInf))));
   simplify(e5, context);
-  assert_trees_are_equal(e5, r5);
+  assert_trees_are_equal(e5, KUndef);
 }
 
 QUIZ_CASE(pcj_simplification_infinity) {
@@ -1752,6 +1751,9 @@ QUIZ_CASE(pcj_simplification_trigonometry) {
 
   // Angle format with hyperbolic trigonometry
   simplifies_to("cos(2)+cosh(2)+cos(2)", "2×cos(2)+cosh(2)",
+                {.m_angleUnit = AngleUnit::Degree});
+
+  simplifies_to("asin(2/√(3)×sin(60))", "90",
                 {.m_angleUnit = AngleUnit::Degree});
 
 #if 0
