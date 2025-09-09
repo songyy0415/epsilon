@@ -64,6 +64,26 @@ QUIZ_CASE(pcj_simplification_expansion) {
   expand_to(KExp(KAdd("x"_e, "y"_e, "z"_e)),
             KMult(KExp("x"_e), KExp("y"_e), KExp("z"_e)));
   expand_to(KLn(KMult(2_e, π_e)), KAdd(KLn(2_e), KLn(π_e)));
+
+  // Pushing the rational on the stack because it can't be made a Ktree.
+  // TODO: Result is false.
+  // 40000000/18358803711643
+  Tree* bigRational = KMult.node<2>->cloneNode();
+  (40000000_e)->cloneTree();
+  KPow->cloneNode();
+  (18358803711643_e)->cloneTree();
+  (-1_e)->cloneTree();
+  SystematicReduction::DeepReduce(bigRational);
+  assert(bigRational->isRational());
+  // ln(40000000/18358803711643)+ln(21)
+  Tree* input = KAdd.node<2>->cloneNode();
+  KLn->cloneNode();
+  bigRational->cloneTree();
+  KLn->cloneNode();
+  (21_e)->cloneTree();
+  // 9*ln(2)+ln(3)+7*ln(5)+ln(7)
+  expand_to(input, KAdd(KMult(9_e, KLn(2_e)), KLn(3_e), KMult(7_e, KLn(5_e)),
+                        KLn(7_e)));
 }
 
 QUIZ_CASE(pcj_simplification_algebraic_expansion) {
