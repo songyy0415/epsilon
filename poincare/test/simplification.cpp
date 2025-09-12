@@ -1585,7 +1585,7 @@ QUIZ_CASE(pcj_simplification_infinity) {
   simplifies_to("log(inf,x)", "dep(∞×sign(1/ln(x)),{nonNull(x),realPos(x)})");
   simplifies_to("log(-inf,x)",
                 "dep(nonreal,{nonNull(x),realPos(x),ln(-∞)/ln(x)})");
-  simplifies_to("log(-inf,x)", "dep((∞+π×i)/ln(x),{nonNull(x)})", cartesianCtx);
+  simplifies_to("log(-inf,x)", "dep(log(-∞,x),{nonNull(x)})", cartesianCtx);
   /* Should be nonreal, TODO return NonReal when evaluating PowReal(x) with x
    * non real */
   simplifies_to("log(inf,-3)", "undef");
@@ -1597,7 +1597,7 @@ QUIZ_CASE(pcj_simplification_infinity) {
   simplifies_to("log(x,inf)", "dep(0,{0×ln(x),nonNull(x),realPos(x)})");
   simplifies_to("log(x,-inf)", "dep(log(x,-∞),{nonNull(x)})", cartesianCtx);
   simplifies_to("log(inf,inf)", "undef");
-  // TODO_PCJ simplifies_to("log(-inf,inf)", "undef", cartesianCtx);
+  simplifies_to("log(-inf,inf)", "undef", cartesianCtx);
   // TODO_PCJ simplifies_to("log(inf,-inf)", "undef", cartesianCtx);
   // TODO_PCJ simplifies_to("log(-inf,-inf)", "undef", cartesianCtx);
   simplifies_to("ln(inf)", "∞");
