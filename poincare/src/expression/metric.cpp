@@ -18,13 +18,8 @@ namespace {
 
 constexpr static float k_defaultMetric = 1.f;
 
-constexpr float GetTypeMetric(Type type) {
+float GetTypeMetric(Type type) {
   switch (type) {
-    case Type::Add:
-    case Type::Mult:
-      /* Add and Mult metrics depend on their number of children. See
-       * GetAddMultMetric. */
-      return 0.f;
     case Type::Zero:
     case Type::One:
     case Type::Two:
@@ -49,15 +44,9 @@ constexpr float GetTypeMetric(Type type) {
 
 /* Add/Mult Metric must depend on its number of children to ensure that if A is
  * better than B*C, A*D will also be better than B*C*D. */
-constexpr float GetAddMultMetric(int numberOfChildren) {
-  static_assert(GetTypeMetric(Type::Mult) == 0.f);
-  static_assert(GetTypeMetric(Type::Add) == 0.f);
-  return k_defaultMetric * (numberOfChildren - 1);
-}
-
-constexpr float GetAddMultMetric(const Tree* e) {
+float GetAddMultMetric(const Tree* e) {
   assert(e->isAdd() || e->isMult());
-  return GetAddMultMetric(e->numberOfChildren());
+  return GetTypeMetric(e->type()) * (e->numberOfChildren() - 1);
 }
 
 Type ShortTypeForBigType(Type t) {
@@ -93,7 +82,7 @@ float Metric::GetTrueMetric(const Tree* e, ReductionTarget reductionTarget) {
   const bool willBeBeautified = reductionTarget == ReductionTarget::User;
   const bool shouldExpand =
       reductionTarget != ReductionTarget::SystemForApproximation;
-  float result = GetMetric(e->type());
+  float result = GetTypeMetric(e->type());
   /* Some functions must have the smallest children possible, so we increase the
    * cost of all children inside the parent expression with a coefficient. */
   float childrenCoeff = 1;
@@ -103,10 +92,9 @@ float Metric::GetTrueMetric(const Tree* e, ReductionTarget reductionTarget) {
     case Type::RationalPosBig:
     case Type::IntegerNegBig:
     case Type::IntegerPosBig:
-      if (willBeBeautified) {
-        return GetTypeMetric(ShortTypeForBigType(e->type())) * e->nodeSize();
-      }
-      break;
+      return willBeBeautified
+                 ? GetTypeMetric(ShortTypeForBigType(e->type())) * e->nodeSize()
+                 : GetTypeMetric(e->type());
     case Type::Mult: {
       result = GetAddMultMetric(e);
       if (willBeBeautified) {
@@ -125,6 +113,8 @@ float Metric::GetTrueMetric(const Tree* e, ReductionTarget reductionTarget) {
                 &ctx) ||
             PatternMatching::Match(
                 e, KMult(KA_s, KATanRad(KMult(KB_s, i_e)), KC_s, i_e), &ctx)) {
+          result +=
+              GetTypeMetric(Type::MinusOne) - GetTypeMetric(Type::ComplexI) * 2;
           if (ctx.getNumberOfTrees(KB) == 1) {
             result -= GetAddMultMetric(e);
           }
@@ -218,7 +208,7 @@ float Metric::GetTrueMetric(const Tree* e, ReductionTarget reductionTarget) {
       if (willBeBeautified &&
           PatternMatching::Match(e, KTrig(KMult(KA_s, i_e), 0_e), &ctx)) {
         // cos(A*i) is beautified into cosh(A)
-        result -= GetMetric(Type::ComplexI);
+        result -= GetTypeMetric(Type::ComplexI);
         if (ctx.getNumberOfTrees(KA) == 1) {
           result -= GetAddMultMetric(e->child(0));
         }
@@ -279,7 +269,7 @@ float Metric::GetMetric(const Tree* e, ReductionTarget reductionTarget) {
    * advanced reduction have the same metric.
    * This factor should be smaller than the minimal difference in metric
    * i.e.:
-   * GetMetric(Type::IntegerPosShort) - GetMetric(Type::Zero)
+   * GetTypeMetric(Type::IntegerPosShort) - GetTypeMetric(Type::Zero)
    * = 1/2 - 1/3 = 1/6 */
   float sizeFactor =
       M_2_PI *
@@ -287,37 +277,6 @@ float Metric::GetMetric(const Tree* e, ReductionTarget reductionTarget) {
                 100.f);
   metric += sizeFactor * k_defaultMetric / 8.f;
   return metric;
-}
-
-/* Add/Mult Metric must depend on its number of children to ensure that if A is
- * better than B*C, A*D will also be better than B*C*D. */
-float Metric::GetAddMultMetric(const Tree* e) {
-  assert(e->isAdd() || e->isMult());
-  return GetMetric(e->type()) * (e->numberOfChildren() - 1);
-}
-
-float Metric::GetMetric(Type type) {
-  switch (type) {
-    case Type::Zero:
-    case Type::One:
-    case Type::Two:
-    case Type::MinusOne:
-      return k_defaultMetric / 3.f;
-    case Type::IntegerNegShort:
-    case Type::IntegerPosShort:
-      return k_defaultMetric / 2.f;
-    default:
-      return k_defaultMetric;
-    case Type::PowReal:
-    case Type::Random:
-    case Type::RandInt:
-      return k_defaultMetric * 2.f;
-    case Type::Var:
-    case Type::UserSymbol:
-      return k_defaultMetric * 3.f;
-    case Type::Sum:
-      return k_defaultMetric * 4.f;
-  }
 }
 
 namespace {
