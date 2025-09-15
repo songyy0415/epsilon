@@ -20,7 +20,13 @@ void PoolCheckpoint::protectedDiscard() const {
 }
 
 void PoolCheckpoint::rollback() const {
-  Internal::TreeStack::SharedTreeStack->flush();
+  /* NOTE: The flow here may come from a Home press inside an external app, if
+   * this is the case, value from the TreeStack and the Pool cannot be trusted
+   * as they may have been corrupted by the external app heap usage.
+   * Re-init the TreeStack.
+   * The call to [freePoolFromObject] is enough to properly reset the pool.
+   * TODO: maybe find a safer alternative */
+  Internal::TreeStack::SharedTreeStack.init();
   Pool::sharedPool->freePoolFromObject(m_endOfPool);
 }
 

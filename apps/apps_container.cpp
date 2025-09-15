@@ -261,6 +261,11 @@ void AppsContainer::switchToExternalApp(Ion::ExternalApps::App app) {
   if (appStart) {
     appStart();
   }
+  /* NOTE: Values from the TreeStack and the Pool cannot be trusted as they may
+   * have been corrupted by the external app heap usage.
+   * Resetting the TreeStack and the Pool here is required */
+  Internal::TreeStack::SharedTreeStack.init();
+  Pool::sharedPool.init();
   switchToBuiltinApp(homeAppSnapshot());
   assert(activeApp());
   if (!appStart) {
