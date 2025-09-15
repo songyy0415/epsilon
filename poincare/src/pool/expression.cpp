@@ -376,6 +376,13 @@ UserExpression UserExpression::cloneAndApproximate(
     Internal::ProjectionContext& context) const {
   Approximation::Context approxCtx(context.m_angleUnit, context.m_complexFormat,
                                    context.m_context);
+#ifdef POINCARE_MAX_TREE_SIZE_FOR_APPROXIMATION
+  if (tree()->maxDepth() > POINCARE_MAX_TREE_SIZE_FOR_APPROXIMATION) {
+    // Prevent recursive approximation algorithms from overflowing the stack
+    return UserExpression::Builder(KUndefUnhandled->cloneTree());
+  }
+#endif
+
   Tree* a;
   if (CAS::Enabled()) {
     a = tree()->cloneTree();
@@ -425,6 +432,13 @@ Expression UserExpression::privateCloneAndReduceOrSimplify(
     bool* reductionFailure) const {
   assert(!isUninitialized());
   Tree* e = tree()->cloneTree();
+#ifdef POINCARE_MAX_TREE_SIZE_FOR_SIMPLIFICATION
+  if (tree()->maxDepth() > POINCARE_MAX_TREE_SIZE_FOR_SIMPLIFICATION) {
+    // Prevent recursive simplification algorithms from overflowing the stack
+    *reductionFailure = true;
+    return Builder(e);
+  }
+#endif
   // TODO_PCJ: Decide if a projection is needed or not
   bool reductionSuccess = Simplification::Simplify(e, context, beautify);
   if (reductionFailure) {
