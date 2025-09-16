@@ -34,17 +34,18 @@ void PoolCheckpoint::rollback() const {
 #endif
   /* NOTE: A rollback may be triggered when:
    * - Pressing Home in an external app/code app
+   * - Other Home press, or CircuitBreaker
    * - On a PoolCheckpoint::Raise
    *
-   * In both cases the TreeStack must be emptied but in the former the values it
+   * In all cases the TreeStack must be emptied but in the first the values it
    * contains can be corrupted by the heap usage so we re-init the TreeStack for
    * safety. */
   Internal::TreeStack::SharedTreeStack.init();
-  /* Technically the [sharedPool] as the same corruption issue as the TreeStack
-   * but in the latter case, it must not be emptied entirely. So we cannot
+  /* Technically the [sharedPool] has the same corruption issue as the TreeStack
+   * but in the third case, it must not be emptied entirely. So we cannot
    * re-init it.
    * The call to [freePoolFromObject] seems resilient enough to properly reset
-   * the pool even with a corrupt heap.
+   * the pool even with a corrupted heap.
    * TODO : find a safer alternative: TrackedGlobalBox for those sharedObject */
   Pool::sharedPool->freePoolFromObject(m_endOfPool);
 }
