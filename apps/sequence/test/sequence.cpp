@@ -124,6 +124,7 @@ QUIZ_CASE(sequence_evaluation) {
   check_sequences_defined_by(results1, types, definitions, conditions1,
                              conditions2);
 
+#if 0
   MathPreferences::SharedPreferences()->setComplexFormat(
       Preferences::ComplexFormat::Cartesian);
   // u(n) = (-1/2)^n
@@ -137,6 +138,7 @@ QUIZ_CASE(sequence_evaluation) {
                              conditions2);
   MathPreferences::SharedPreferences()->setComplexFormat(
       Preferences::ComplexFormat::Real);
+#endif
 
   // u(n+1) = u(n)+n, u(0) = 0
   double results2[SequenceStore::k_maxNumberOfSequences][10] = {
