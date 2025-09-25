@@ -747,6 +747,19 @@ int SystemExpression::getPolynomialReducedCoefficients(
   return degree;
 }
 
+UserExpression UserExpression::equivalentCartesianEquation() const {
+  const Tree* t = tree();
+  // Looking for KSub("y"_e, [something without "y"_e])
+  if (t->isSub() && t->child(0)->isUserSymbol() &&
+      strcmp(Symbol::GetName(t->child(0)), "y") == 0 &&
+      !(t->child(1)->hasDescendantSatisfying([](const Tree* e) {
+        return (e->isUserSymbol() && strcmp(Symbol::GetName(e), "y") == 0);
+      }))) {
+    return UserExpression::Builder(t->child(1));
+  }
+  return UserExpression();
+}
+
 Poincare::Layout UserExpression::createLayout(
     Preferences::PrintFloatMode floatDisplayMode, int numberOfSignificantDigits,
     Context* context, OMG::Base base, bool linearMode) const {

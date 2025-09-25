@@ -308,6 +308,8 @@ class Expression : public PoolHandle {
                                        Preferences::UnitFormat unitFormat,
                                        SymbolicComputation symbolicComputation,
                                        bool keepDependencies = false) const;
+  // If of the form y-f(x), return f(x). Return uninitialized otherwise.
+  UserExpression equivalentCartesianEquation() const;
 
   Layout createLayout(Preferences::PrintFloatMode floatDisplayMode,
                       int numberOfSignificantDigits, Context* context,
