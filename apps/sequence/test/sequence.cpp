@@ -118,9 +118,19 @@ QUIZ_CASE(sequence_evaluation) {
       nullptr, nullptr, nullptr};
 
   // u(n) = n
-  double results1[SequenceStore::k_maxNumberOfSequences][10] = {
+  double results0[SequenceStore::k_maxNumberOfSequences][10] = {
       {0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0}, {}, {}};
   definitions[0] = "n";
+  check_sequences_defined_by(results0, types, definitions, conditions1,
+                             conditions2);
+
+  // u(n) = floor(1200*1.0125^(n-1+160))
+  double results1[SequenceStore::k_maxNumberOfSequences][10] = {
+      {8649.0, 8757.0, 8867.0, INFINITY, INFINITY, INFINITY, INFINITY, INFINITY,
+       INFINITY, INFINITY},
+      {},
+      {}};
+  definitions[0] = "floor(1200*1.0125^(n-1+160))";
   check_sequences_defined_by(results1, types, definitions, conditions1,
                              conditions2);
 
