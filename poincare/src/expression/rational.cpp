@@ -222,14 +222,14 @@ Rational::IntegerOperationResult Rational::IntegerPower(const Tree* e1,
             : Rational::PushIrreducible(newNumerator, newDenominator);
     newDenominator->removeTree();
     newNumerator->removeTree();
-    return IntegerOperationResult{.tree = result, .hasOverflow = false};
+    return IntegerOperationResult{.tree = result, .hasOverflown = false};
   }
   ExceptionCatch(type) {
     if (type == ExceptionType::IntegerOverflow) {
       // Return the unchanged power
       return IntegerOperationResult{
           .tree = PatternMatching::Create(KPow(KA, KB), {.KA = e1, .KB = e2}),
-          .hasOverflow = true};
+          .hasOverflown = true};
     }
     TreeStackCheckpoint::Raise(type);
   }

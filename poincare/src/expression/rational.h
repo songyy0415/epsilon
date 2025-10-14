@@ -51,7 +51,7 @@ class Rational final {
   }
   struct IntegerOperationResult {
     Tree* tree;
-    bool hasOverflow;
+    bool hasOverflown;
   };
 
   // IntegerPower of (p1/q1)^(p2) --> (p1^p2)/(q1^p2)

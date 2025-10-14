@@ -193,7 +193,7 @@ bool SystematicOperation::ReducePower(Tree* e) {
   if (base->isRational()) {
     Rational::IntegerOperationResult result = Rational::IntegerPower(base, n);
     e->moveTreeOverTree(result.tree);
-    return !result.hasOverflow;
+    return !result.hasOverflown;
   }
   // base^0 -> 1
   if (n->isZero()) {
