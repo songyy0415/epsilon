@@ -62,8 +62,6 @@ class PiecewiseOperator final : public OExpression {
 
   // OExpression
   OExpression shallowReduce(ReductionContext reductionContext);
-  bool derivate(const ReductionContext& reductionContext, Symbol symbol,
-                OExpression symbolValue);
 
   // Returns -1 if every condition is false
   template <typename T>
