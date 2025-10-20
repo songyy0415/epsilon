@@ -27,6 +27,33 @@ class Binary {
 
   static bool ReducePiecewise(Tree* e);
 
+  /* If all conditions are handled, distribute derivation on branches, and add
+   * undef branches at each condition breakpoints. For example:
+   * piecewise(f1(x),  x>1,
+   *           f2(x),  x≤2,
+   *           f3(x),  x=3,
+   *           f4(x),  x≠4,
+   *           f5(x))
+   * Is derived to
+   * piecewise(f'1(x), x>1,
+   *           undef,  x≥1,
+   *           f'2(x), x<2,
+   *           undef,  x≤2,
+   *           f'3(x), false,
+   *           undef,  x=3,
+   *           f'4(x), x≠4,
+   *           undef,  true,
+   *           f'5(x))
+   * And then reduced.
+   */
+  static Tree* ReducePiecewiseDerivative(const Tree* symbol,
+                                         const Tree* symbolValue,
+                                         const Tree* order,
+                                         const Tree* derivand);
+
+ private:
+  constexpr static const char* k_logicalNotName = "not";
+
   /* Make reduced piecewise condition [e] lenient.
    * Return false if unhandled. Examples :
    * a > b  is turned into a >= b
@@ -42,8 +69,6 @@ class Binary {
    * xor(a > b, a >= c) returns false. */
   static bool MakeStrict(Tree* e);
 
- private:
-  constexpr static const char* k_logicalNotName = "not";
   struct TypeAndName {
     Type type;
     const char* name;

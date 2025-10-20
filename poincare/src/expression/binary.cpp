@@ -2,6 +2,7 @@
 
 #include <omg/unreachable.h>
 #include <omg/utf8_helper.h>
+#include <poincare/src/expression/systematic_reduction.h>
 #include <poincare/src/memory/n_ary.h>
 #include <poincare/src/memory/pattern_matching.h>
 
@@ -347,6 +348,46 @@ bool Binary::MakeStrict(Tree* e) {
   if (result) {
     ReduceBooleanOperator(e);
   }
+  return result;
+}
+
+Tree* Binary::ReducePiecewiseDerivative(const Tree* symbol,
+                                        const Tree* symbolValue,
+                                        const Tree* order,
+                                        const Tree* derivand) {
+  assert(derivand->isPiecewise());
+  int numberOfChildren = derivand->numberOfChildren();
+  Tree* result = derivand->cloneNode();
+  for (IndexedChild<const Tree*> derivandChild : derivand->indexedChildren()) {
+    if (derivandChild.index % 2 == 0) {
+      // Derive branch
+      PatternMatching::CreateSimplify(
+          KDiff(KA, KB, KC, KD),
+          {.KA = symbol, .KB = symbolValue, .KC = order, .KD = derivandChild},
+          {.KD = 1});
+    } else {
+      // Clone strict condition and leave scope.
+      Tree* strictCondition = derivandChild->cloneTree();
+      if (!Binary::MakeStrict(strictCondition)) {
+        SharedTreeStack->flushFromBlock(result);
+        return nullptr;
+      }
+      Variables::LeaveScopeWithReplacement(strictCondition, symbolValue, true,
+                                           false);
+      numberOfChildren += 2;
+      KUndef->cloneTree();
+      // Clone nonStrict condition and leave scope.
+      strictCondition = derivandChild->cloneTree();
+      if (!Binary::MakeLenient(strictCondition)) {
+        SharedTreeStack->flushFromBlock(result);
+        return nullptr;
+      }
+      Variables::LeaveScopeWithReplacement(strictCondition, symbolValue, true,
+                                           false);
+    }
+  }
+  NAry::SetNumberOfChildren(result, numberOfChildren);
+  SystematicReduction::ShallowReduce(result);
   return result;
 }
 
