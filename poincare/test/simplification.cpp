@@ -1995,7 +1995,7 @@ QUIZ_CASE(pcj_simplification_piecewise) {
   simplifies_to("diff(piecewise(-x,2>x>=3,x),x,x)",
                 "piecewise(-1,2>x and x>3,undef,2≥x and x≥3,1)");
   simplifies_to("diff(piecewise(-x,x<1 nor x>=2,x),x,x)",
-                "piecewise(-1,not (x<=1 or x>=2),undef,not (x<1 or x>2),1)");
+                "piecewise(-1,not (x≤1 or x≥2),undef,not (x<1 or x>2),1)");
 }
 
 QUIZ_CASE(pcj_simplification_distributions) {
