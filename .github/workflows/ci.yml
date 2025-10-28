@@ -32,7 +32,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  MAKEFLAGS: ${{ vars.MAKEFLAGS_CACHED }}
+  MAKEFLAGS: -j32
 
 jobs:
   device:
@@ -43,7 +43,7 @@ jobs:
       matrix:
         model: [n0110, n0115, n0120]
     env:
-      MAKEFLAGS: ${{ vars.MAKEFLAGS_CACHED }}
+      MAKEFLAGS: -j32
     steps:
       - uses: actions/checkout@v4
 
@@ -102,7 +102,7 @@ jobs:
     timeout-minutes: 15
     runs-on: ${{ fromJSON(vars.EPSILON_CACHED_RUNNER_LABELS) }}
     env:
-      MAKEFLAGS: ${{ vars.MAKEFLAGS_CACHED }}
+      MAKEFLAGS: -j32
     steps:
       - uses: actions/checkout@v4
 
@@ -144,7 +144,7 @@ jobs:
     timeout-minutes: 15
     runs-on: ${{ fromJSON(vars.EPSILON_CACHED_RUNNER_LABELS) }}
     env:
-      MAKEFLAGS: ${{ vars.MAKEFLAGS_CACHED }}
+      MAKEFLAGS: -j32
     steps:
       - name: Checkout
         uses: actions/checkout@v4

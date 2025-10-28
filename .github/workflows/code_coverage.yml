@@ -7,7 +7,7 @@ jobs:
     timeout-minutes: 15
     runs-on: ${{ fromJSON(vars.EPSILON_CACHED_RUNNER_LABELS) }}
     env:
-      MAKEFLAGS: ${{ vars.MAKEFLAGS_CACHED }}
+      MAKEFLAGS: -j32
       COVERAGE_OUTPUT_DIR: 'output/debug/no_assert/linux/coverage'
     steps:
       - name: Fetch target branch and PR branch

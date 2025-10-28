@@ -10,7 +10,7 @@ on:
       - '**/scandium/**'
       - 'external_apps/**'
 env:
-  MAKEFLAGS: ${{ vars.MAKEFLAGS_CACHED }} PLATFORM=n0120
+  MAKEFLAGS: -j32 PLATFORM=n0120
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}

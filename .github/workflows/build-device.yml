@@ -7,7 +7,7 @@ on:
         default: false
 
 env:
-  MAKEFLAGS: ${{ vars.MAKEFLAGS }}
+  MAKEFLAGS: -j32
 
 jobs:
   build:
