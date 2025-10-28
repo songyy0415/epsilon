@@ -19,7 +19,7 @@ concurrency:
 jobs:
   binary-size:
     timeout-minutes: 15
-    runs-on: ${{ fromJSON(vars.EPSILON_CACHED_RUNNER_LABELS) }}
+    runs-on: ubuntu-latest
     steps:
       - name: Fetch target branch and PR branch
         uses: actions/checkout@v4

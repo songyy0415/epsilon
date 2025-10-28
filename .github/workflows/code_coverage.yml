@@ -5,7 +5,7 @@ on: workflow_call
 jobs:
   coverage:
     timeout-minutes: 15
-    runs-on: ${{ fromJSON(vars.EPSILON_CACHED_RUNNER_LABELS) }}
+    runs-on: ubuntu-latest
     env:
       MAKEFLAGS: -j32
       COVERAGE_OUTPUT_DIR: 'output/debug/no_assert/linux/coverage'

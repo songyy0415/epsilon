@@ -37,7 +37,7 @@ env:
 jobs:
   device:
     timeout-minutes: 15
-    runs-on: ${{ fromJSON(vars.EPSILON_CACHED_RUNNER_LABELS) }}
+    runs-on: ubuntu-latest
     if: ${{ (fromJSON(github.event.inputs.device)) }}
     strategy:
       matrix:
@@ -100,7 +100,7 @@ jobs:
           path: output/debug/optimized/windows/epsilon.exe
   linux:
     timeout-minutes: 15
-    runs-on: ${{ fromJSON(vars.EPSILON_CACHED_RUNNER_LABELS) }}
+    runs-on: ubuntu-latest
     env:
       MAKEFLAGS: -j32
     steps:
@@ -142,7 +142,7 @@ jobs:
           path: output/debug/optimized/macos/epsilon.app
   poincarejs:
     timeout-minutes: 15
-    runs-on: ${{ fromJSON(vars.EPSILON_CACHED_RUNNER_LABELS) }}
+    runs-on: ubuntu-latest
     env:
       MAKEFLAGS: -j32
     steps:
