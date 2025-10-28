@@ -17,16 +17,10 @@ on:
       device:
         type: boolean
         default: false
-      android:
-        type: boolean
-        default: false
       windows:
         type: boolean
         default: false
       macos:
-        type: boolean
-        default: false
-      ios:
         type: boolean
         default: false
       web:
@@ -41,22 +35,6 @@ env:
   MAKEFLAGS: ${{ vars.MAKEFLAGS_CACHED }}
 
 jobs:
-  android:
-    timeout-minutes: 15
-    runs-on: ubuntu-latest
-    if: ${{ (fromJSON(vars.ADVANCED_JOBS) || fromJSON(github.event.inputs.android)) }}
-    env:
-      MAKEFLAGS: '-j2'
-    steps:
-      - run: $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "ndk;22.1.7171670"
-      - uses: actions/checkout@v4
-      - run: build/setup.sh --only-simulator
-      - run: make PLATFORM=simulator TARGET=android ASSERTIONS=1 test.apk
-      - run: make PLATFORM=simulator TARGET=android ASSERTIONS=1 epsilon.apk
-      - uses: actions/upload-artifact@master
-        with:
-          name: epsilon-android.apk
-          path: output/debug/optimized/android/epsilon.apk
   device:
     timeout-minutes: 15
     runs-on: ${{ fromJSON(vars.EPSILON_CACHED_RUNNER_LABELS) }}
@@ -187,22 +165,6 @@ jobs:
         with:
           name: epsilon-macos.zip
           path: output/debug/optimized/macos/epsilon.app
-  ios:
-    timeout-minutes: 15
-    runs-on: macOS-latest
-    if: ${{ (fromJSON(vars.ADVANCED_JOBS) || fromJSON(github.event.inputs.ios)) }}
-    env:
-      MAKEFLAGS: '-j2'
-    steps:
-      - uses: actions/checkout@v4
-      - run: build/setup.sh --only-simulator
-      - run: make PLATFORM=simulator TARGET=ios ASSERTIONS=1 epsilon.ipa
-      - run: make PLATFORM=simulator TARGET=ios ASSERTIONS=1 test.ipa
-      - run: make PLATFORM=simulator TARGET=ios APPLE_PLATFORM=ios-simulator
-      - uses: actions/upload-artifact@v4
-        with:
-          name: epsilon-ios.ipa
-          path: output/debug/optimized/ios/epsilon.ipa
   poincarejs:
     timeout-minutes: 15
     runs-on: ${{ fromJSON(vars.EPSILON_CACHED_RUNNER_LABELS) }}
