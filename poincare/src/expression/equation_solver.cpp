@@ -189,7 +189,6 @@ Tree* EquationSolver::PrivateExactSolve(const Tree* equationsSet,
   }
   if (*error == Error::RequireApproximateSolution) {
     context->type = Type::GeneralMonovariable;
-    // TODO: Handle GeneralMonovariable solving.
     assert(result.isUninitialized());
     reducedEquationSet->removeTree();
     userSymbols->removeTree();
