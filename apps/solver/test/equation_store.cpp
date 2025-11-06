@@ -160,6 +160,10 @@ QUIZ_CASE(solver_quadratic) {
 
 QUIZ_CASE(solver_cubic) {
   Shared::GlobalContext globalContext;
+  setComplexFormatAndAngleUnit(Real, Radian);
+
+  assert_solves_to("(x^2+1)*(x-3)=0", {"x=3", "delta=-400"}, &globalContext);
+
   setComplexFormatAndAngleUnit(Cartesian, Radian);
 
   assert_solves_to("x^3+x+1=0",
