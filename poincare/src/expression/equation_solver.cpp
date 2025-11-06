@@ -185,6 +185,14 @@ Tree* EquationSolver::PrivateExactSolve(const Tree* equationsSet,
           }
         }
       }
+      if (result->numberOfChildren() == 1 && context->degree == 3) {
+        /* At least one solution should be real, but something unexpected
+         * happened. Fallback on numeric solver. */
+        *error = Error::RequireApproximateSolution;
+        // Discard discriminant
+        result->removeTree();
+        result = TreeRef();
+      }
     }
   }
   if (*error == Error::RequireApproximateSolution) {
