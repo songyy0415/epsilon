@@ -257,14 +257,29 @@ Tree* Roots::CubicRootsKnowingNonZeroRoot(const Tree* a, const Tree* b,
   return allRoots;
 }
 
+Tree* CubicRootSignAware(const Tree* e) {
+  /* If possible, the number under the cubic root is made positive. This avoids
+   * the exact reduction algorithm to fall on a logarithm of a negative.
+   */
+  ComplexSign sign = GetComplexSign(e);
+  bool shouldRevertSign = sign.isReal() && sign.realSign().isNegative();
+  return shouldRevertSign
+             ? PatternMatching::CreateSimplify(
+                   KMult(-1_e, KPow(KMult(-1_e, KA), KPow(3_e, -1_e))),
+                   {.KA = e})
+             : PatternMatching::CreateSimplify(KPow(KA, KPow(3_e, -1_e)),
+                                               {.KA = e});
+}
+
 Tree* Roots::CubicRootsNullSecondAndThirdCoefficients(const Tree* a,
                                                       const Tree* d) {
   /* Polynoms of the form "ax^3+d=0" have a simple real solution : x1 =
    * sqrt(-d/a,3). Then the two other complex conjugate roots are given by x2 =
    * rootsOfUnity[1] * x1 and x3 = rootsOfUnity[[2] * x1. */
-  Tree* baseRoot = PatternMatching::CreateSimplify(
-      KPow(KMult(-1_e, KPow(KA, -1_e), KD), KPow(3_e, -1_e)),
-      {.KA = a, .KD = d});
+  TreeRef base = PatternMatching::CreateSimplify(
+      KMult(-1_e, KPow(KA, -1_e), KD), {.KA = a, .KD = d});
+  TreeRef baseRoot = CubicRootSignAware(base);
+  base->removeTree();
   TreeRef rootList = PatternMatching::CreateSimplify(
       KList(KA, KMult(KA, k_cubeRootOfUnity1), KMult(KA, k_cubeRootOfUnity2)),
       {.KA = baseRoot});
