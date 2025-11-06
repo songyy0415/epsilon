@@ -293,6 +293,8 @@ QUIZ_CASE(solver_cubic_real) {
   assert_solves_to("x^3+x^2-15/4×x-9/2=0", {"x=-3/2", "x=2", "delta=0"},
                    &globalContext);
 
+  assert_solves_to("x^3+8/27=0", {"x=-2/3", "delta=-64/27"}, &globalContext);
+
 #if 0  // TODO_PCJ: fails to simplify
   assert_solves_to("1/9×(x+√(2))^3=0", {"x=-√(2)", "delta=0"}, &globalContext);
 #endif
