@@ -426,6 +426,9 @@ QUIZ_CASE(pcj_approximation_parametrics) {
   approximates_to<float>("int(x, x, 1, 2)", "1.5");
   approximates_to<float>("diff(2×x, x, 2)", "2");
   approximates_to<float>("sum(k/2, k, 1, 12)", "39");
+
+  simplified_approximates_to<double>("sum((-1)^k/(2k+1), k, 0, 400)",
+                                     "0.78602160382469");
 }
 
 QUIZ_CASE(pcj_approximation_integrals) {
