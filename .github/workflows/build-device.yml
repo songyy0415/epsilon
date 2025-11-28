@@ -20,15 +20,18 @@ jobs:
       - name: Setup
         run: build/setup.sh
       # Not using matrix strategy to avoid multiplying setups and uploads.
-      - name: Build n0110
-        run: make MODEL=n0110 userland.A.onboarding.dfu
-      - run: make MODEL=n0110 userland.A.onboarding.allow3rdparty.dfu
-      - name: Build n0115
-        run: make MODEL=n0115 userland.A.onboarding.dfu
-      - run: make MODEL=n0115 userland.A.onboarding.allow3rdparty.dfu
+      #- name: Build n0110
+       # run: make MODEL=n0110 userland.A.onboarding.dfu
+      #- run: make MODEL=n0110 userland.A.onboarding.allow3rdparty.dfu
+     # - name: Build n0115
+        #run: make MODEL=n0115 userland.A.onboarding.dfu
+      #- run: make MODEL=n0115 userland.A.onboarding.allow3rdparty.dfu
       - name: Build n0120
         run: make MODEL=n0120 EMBED_EXTRA_DATA=1 userland.A.onboarding.dfu
       - run: make MODEL=n0120 EMBED_EXTRA_DATA=1 userland.A.onboarding.allow3rdparty.dfu
+      - run: make MODEL=n0120 EMBED_EXTRA_DATA=1 userland.A.allow3rdparty.dfu
+      - run: make MODEL=n0120 EMBED_EXTRA_DATA=1 userland.A.dfu
+      - run: make MODEL=n0120 EMBED_EXTRA_DATA=1 userland.B.dfu
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
