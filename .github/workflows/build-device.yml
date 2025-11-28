@@ -33,5 +33,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: unsigned-device-builds
-          path: output/release/*/epsilon*dfu
+          path: output/release/*/*.dfu
           retention-days: 7
