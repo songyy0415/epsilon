@@ -1,6 +1,7 @@
 name: Build metrics
 # read-only repo token
 on:
+  workflow_dispatch:
   pull_request:
     paths-ignore:
       - '**/*.md'
